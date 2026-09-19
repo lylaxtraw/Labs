@@ -1,175 +1,115 @@
 """
 Módulo de animaciones para pantalla OLED.
 
-Define las cuatro escenas animadas y proporciona funciones para
-generar y mostrar frames de animación.
+Define las cuatro escenas animadas basadas en GIFs convertidos.
+Los frames fueron generados automáticamente desde archivos GIF
+usando el convertidor gif_to_frames.py.
+
+Los módulos de frames se ubican en docs/scenes/scene_N/
 """
+
+import sys
+
+# Agregar rutas para importar módulos de escenas
+# Compatible con MicroPython y desarrollo local
+_scene_paths = ['/docs', '/docs/scenes', 'docs', 'docs/scenes', 'src/docs', 'src/docs/scenes']
+
+for _path in _scene_paths:
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
+
+
+def _lazy_import_scene_creator(scene_num):
+    """Importa dinámicamente la función creadora de una escena."""
+    try:
+        # Intentar importación relativa desde /docs
+        module_name = f'scenes.scene_{scene_num}.scene_{scene_num}_frames'
+        create_func_name = f'create_scene{scene_num}_frames'
+        
+        module = __import__(module_name, fromlist=[create_func_name])
+        return getattr(module, create_func_name)
+    except ImportError:
+        # Fallback: intentar importación desde docs relativo
+        try:
+            import importlib
+            module = importlib.import_module(f'scenes.scene_{scene_num}.scene_{scene_num}_frames')
+            return getattr(module, f'create_scene{scene_num}_frames')
+        except:
+            return None
 
 
 class AnimationScene:
     """Representa una escena de animación con múltiples frames."""
     
-    def __init__(self, name: str, frames: list):
+    def __init__(self, name: str, frame_count: int, frames_obj):
         """
         Inicializa una escena de animación.
         
         Args:
             name: Nombre descriptivo de la escena
-            frames: Lista de frames (funciones de dibujo)
+            frame_count: Número de frames en la escena
+            frames_obj: Objeto que actúa como lista con __getitem__ y __len__
         """
         self.name = name
-        self.frames = frames
-        self.frame_count = len(frames)
+        self.frame_count = frame_count
+        self.frames = frames_obj
     
     def get_frame(self, index: int) -> callable:
         """Obtiene un frame específico con índice cíclico."""
         return self.frames[index % self.frame_count]
 
 
-def create_scene1_frames():
-    """Crea los frames para la escena de círculos animados."""
-    frames = []
-    for frame_num in range(12):
-        # Crear una función que captura frame_num
-        def make_frame(fn):
-            def frame_func(display, _=None):
-                display.fill(0)
-                
-                # Radio que crece y luego encoge (12 frames)
-                if fn < 6:
-                    radius = 5 + fn * 2
-                else:
-                    radius = 17 - (fn - 6) * 2
-                
-                center_x = 64
-                center_y = 32
-                
-                # Dibujar círculo usando aproximación
-                for angle in range(0, 360, 30):
-                    import math
-                    rad = math.radians(angle)
-                    x = int(center_x + radius * math.cos(rad))
-                    y = int(center_y + radius * math.sin(rad))
-                    display.pixel(x, y, 1)
-                
-                display.show()
-            return frame_func
-        
-        frames.append(make_frame(frame_num))
-    
-    return frames
-
-
-def create_scene2_frames():
-    """Crea los frames para la escena de líneas dinámicas."""
-    frames = []
-    for frame_num in range(12):
-        def make_frame(fn):
-            def frame_func(display, _=None):
-                display.fill(0)
-                
-                # Líneas horizontales que se desplazan
-                line_positions = [10, 20, 30, 40, 50, 60]
-                offset = fn * 8
-                
-                for pos in line_positions:
-                    y = (pos + offset) % 64
-                    display.line(0, y, 127, y, 1)
-                
-                # Agregar un rectángulo móvil
-                rect_x = (fn * 10) % 128
-                display.rect(rect_x, 5, 20, 20, 1)
-                
-                display.show()
-            return frame_func
-        
-        frames.append(make_frame(frame_num))
-    
-    return frames
-
-
-def create_scene3_frames():
-    """Crea los frames para la escena de rectángulos rotantes."""
-    frames = []
-    for frame_num in range(12):
-        def make_frame(fn):
-            def frame_func(display, _=None):
-                display.fill(0)
-                
-                center_x = 64
-                center_y = 32
-                
-                # Rectángulos de diferentes tamaños
-                sizes = [(30, 40), (40, 30), (35, 35), (25, 45), (45, 25), (40, 40)]
-                size = sizes[fn % len(sizes)]
-                
-                x1 = center_x - size[0] // 2
-                y1 = center_y - size[1] // 2
-                x2 = center_x + size[0] // 2
-                y2 = center_y + size[1] // 2
-                
-                display.rect(x1, y1, x2 - x1, y2 - y1, 1)
-                
-                # Rectángulos internos concentricos
-                margin = 5
-                display.rect(x1 + margin, y1 + margin, 
-                            x2 - x1 - 2 * margin, y2 - y1 - 2 * margin, 1)
-                
-                display.show()
-            return frame_func
-        
-        frames.append(make_frame(frame_num))
-    
-    return frames
-
-
-def create_scene4_frames():
-    """Crea los frames para la escena de patrón parpadeante."""
-    frames = []
-    for frame_num in range(12):
-        def make_frame(fn):
-            def frame_func(display, _=None):
-                display.fill(0)
-                
-                square_size = 8
-                cols = 128 // square_size
-                rows = 64 // square_size
-                
-                # Crear patrón de tablero que cambia con cada frame
-                for row in range(rows):
-                    for col in range(cols):
-                        # Alternar color según paridad y frame
-                        if (row + col + fn) % 2 == 0:
-                            x = col * square_size
-                            y = row * square_size
-                            display.rect(x, y, square_size, square_size, 1)
-                
-                display.show()
-            return frame_func
-        
-        frames.append(make_frame(frame_num))
-    
-    return frames
-
-
-# Definir las cuatro escenas de animación
-SCENES = [
-    AnimationScene("Círculos Animados", create_scene1_frames()),
-    AnimationScene("Líneas Dinámicas", create_scene2_frames()),
-    AnimationScene("Rectángulos Rotantes", create_scene3_frames()),
-    AnimationScene("Patrón Parpadeante", create_scene4_frames()),
+# Crear escenas bajo demanda (lazy loading a nivel de escena)
+_SCENE_CREATORS = [
+    ("Escena 1 - Animación desde GIF", 15),
+    ("Escena 2 - Animación desde GIF", 101),
+    ("Escena 3 - Animación desde GIF", 153),
+    ("Escena 4 - Animación desde GIF", 157),
 ]
+
+_SCENES_CACHE = {}  # Cache para escenas ya cargadas
+
+
+def _get_scene_object(scene_num: int) -> AnimationScene:
+    """Obtiene o crea una escena bajo demanda."""
+    if scene_num not in _SCENES_CACHE:
+        name, frame_count = _SCENE_CREATORS[scene_num]
+        # Importar función creadora dinámicamente
+        creator_func = _lazy_import_scene_creator(scene_num + 1)
+        if creator_func is None:
+            raise ImportError(f"No se pudo importar escena {scene_num + 1}")
+        frames_obj = creator_func()  # Esto retorna un LazyFrameLoader del generador
+        _SCENES_CACHE[scene_num] = AnimationScene(name, frame_count, frames_obj)
+    return _SCENES_CACHE[scene_num]
+
+
+# Crear proxy SCENES que es compatible con código anterior
+class ScenesProxy:
+    """Proxy que actúa como lista pero carga escenas bajo demanda."""
+    def __getitem__(self, index):
+        return _get_scene_object(index)
+    
+    def __len__(self):
+        return 4
+    
+    def __iter__(self):
+        for i in range(4):
+            yield _get_scene_object(i)
+
+
+SCENES = ScenesProxy()
+
 
 
 def get_scene(scene_num: int) -> AnimationScene:
     """
-    Obtiene una escena por número (0-3).
+    Obtiene una escena específica.
     
     Args:
         scene_num: Número de escena (0-3)
     
     Returns:
-        Objeto AnimationScene correspondiente
+        Objeto AnimationScene
     """
     return SCENES[scene_num % len(SCENES)]
 
