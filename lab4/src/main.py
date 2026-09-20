@@ -5,7 +5,7 @@ Llama a la función principal animate() que inicia el sistema
 de animación en la pantalla OLED.
 """
 
-import src.boot as b
+import boot
 
 # Iniciar el sistema de animación
-b.animate()
+boot.animate()
