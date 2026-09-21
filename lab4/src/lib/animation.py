@@ -27,7 +27,7 @@ class AnimationScene:
 
 
 def create_scene1_frames():
-    """Crea los frames para la escena de círculos animados."""
+    """Crea los frames para la escena de ojos felices."""
     frames = []
     for frame_num in range(12):
         # Crear una función que captura frame_num
@@ -61,7 +61,7 @@ def create_scene1_frames():
 
 
 def create_scene2_frames():
-    """Crea los frames para la escena de líneas dinámicas."""
+    """Crea los frames para la escena de ojos tristes."""
     frames = []
     for frame_num in range(12):
         def make_frame(fn):
@@ -89,7 +89,7 @@ def create_scene2_frames():
 
 
 def create_scene3_frames():
-    """Crea los frames para la escena de rectángulos rotantes."""
+    """Crea los frames para la escena de ojos molestos."""
     frames = []
     for frame_num in range(12):
         def make_frame(fn):
@@ -124,7 +124,7 @@ def create_scene3_frames():
 
 
 def create_scene4_frames():
-    """Crea los frames para la escena de patrón parpadeante."""
+    """Crea los frames para la escena de ojos ."""
     frames = []
     for frame_num in range(12):
         def make_frame(fn):
