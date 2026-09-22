@@ -8,7 +8,7 @@ y la reproducción de animaciones.
 
 import src.config as c
 from src.lib.ssd1306 import OLED_SSD1306
-from src.lib.animation import get_scene
+from src.utils.animation import get_scene
 from machine import I2C, Pin
 
 
