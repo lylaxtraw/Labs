@@ -1,32 +1,41 @@
-#!/usr/bin/env bash
+cd /Users/salvaxtraw/UV/uP\ y\ uC/Labs/lab4 && \
+mpremote connect /dev/cu.usbmodem11101 mkdir lib utils tests && \
+for f in src/*.py; do mpremote connect /dev/cu.usbmodem11101 cp "$f" ":$(basename $f)"; done && \
+for f in src/lib/*.py; do mpremote connect /dev/cu.usbmodem11101 cp "$f" ":lib/$(basename $f)"; done && \
+for f in src/utils/*.py; do mpremote connect /dev/cu.usbmodem11101 cp "$f" ":utils/$(basename $f)"; done && \
+for f in tests/*.py; do mpremote connect /dev/cu.usbmodem11101 cp "$f" ":tests/$(basename $f)"; done && \
+echo "✓ Todo subido"cd /Users/salvaxtraw/UV/uP\ y\ uC/Labs/lab4 && \
+mpremote connect /dev/cu.usbmodem11101 mkdir lib utils tests && \
+for f in src/*.py; do mpremote connect /dev/cu.usbmodem11101 cp "$f" ":$(basename $f)"; done && \
+for f in src/lib/*.py; do mpremote connect /dev/cu.usbmodem11101 cp "$f" ":lib/$(basename $f)"; done && \
+for f in src/utils/*.py; do mpremote connect /dev/cu.usbmodem11101 cp "$f" ":utils/$(basename $f)"; done && \
+for f in tests/*.py; do mpremote connect /dev/cu.usbmodem11101 cp "$f" ":tests/$(basename $f)"; done && \
+echo "✓ Todo subido"#!/bin/bash
+PORT="${1:-/dev/cu.usbmodem11101}"
 
-set -euo pipefail
+echo "╔════════════════════════════════════════════════════════════╗"
+echo "║  Subiendo archivos a Pico ($PORT)                         ║"
+echo "╚════════════════════════════════════════════════════════════╝"
+echo ""
 
-PORT="${1:-}"
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE_DIR="${PROJECT_ROOT}/src"
+echo "Creando directorios..."
+ampy --port "$PORT" mkdir lib 2>/dev/null || true
+ampy --port "$PORT" mkdir utils 2>/dev/null || true
 
-if [[ -z "${PORT}" ]]; then
-	printf 'Uso: %s <puerto-serie>\n' "$0" >&2
-	printf 'Ejemplo: %s /dev/cu.usbmodemXXXX\n' "$0" >&2
-	exit 2
-fi
+echo "Subiendo archivos raíz..."
+ampy --port "$PORT" put src/boot.py boot.py
+ampy --port "$PORT" put src/config.py config.py
+ampy --port "$PORT" put src/main.py main.py
+ampy --port "$PORT" put src/app.py app.py
 
-if ! command -v mpremote >/dev/null 2>&1; then
-	printf 'Error: mpremote no esta instalado o no esta en PATH.\n' >&2
-	exit 1
-fi
+echo "Subiendo librerías..."
+ampy --port "$PORT" put src/lib/__init__.py lib/__init__.py
+ampy --port "$PORT" put src/lib/ssd1306.py lib/ssd1306.py
+ampy --port "$PORT" put src/lib/sfhm_pantallas.py lib/sfhm_pantallas.py
 
-remote=(mpremote connect "${PORT}")
+echo "Subiendo utils..."
+ampy --port "$PORT" put src/utils/__init__.py utils/__init__.py
+ampy --port "$PORT" put src/utils/animation.py utils/animation.py
 
-"${remote[@]}" fs mkdir :lib >/dev/null 2>&1 || true
-
-for file in "${SOURCE_DIR}"/*.py; do
-	"${remote[@]}" fs cp "${file}" ":$(basename "${file}")"
-done
-
-for file in "${SOURCE_DIR}/lib"/*.py; do
-	"${remote[@]}" fs cp "${file}" ":lib/$(basename "${file}")"
-done
-
-printf 'Archivos cargados en %s.\n' "${PORT}"
+echo ""
+echo "✓ Archivos subidos"
